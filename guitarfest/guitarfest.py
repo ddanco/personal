@@ -75,23 +75,12 @@ def allocate_guitars_helper(
 
 ##### EXAMPLE #####
 
-ty = Person('ty')
-dominique = Person('dominique')
-helene = Person('helene')
-alex = Person('alex')
+ordering = ('ty', 'helene', 'alex', 'dominique')
 
-guitar_1 = Guitar('guitar1', 'luthier1')
-guitar_2 = Guitar('guitar2', 'luthier2')
-guitar_3 = Guitar('guitar3', 'luthier3')
-guitar_4 = Guitar('guitar4', 'luthier4')
-guitar_5 = Guitar('guitar5', 'luthier5')
-
-ordering = (ty, helene, alex, dominique)
-
-ty_ranking = Ranking(ty, (guitar_1, guitar_2, guitar_3))
-helene_ranking = Ranking(helene, (guitar_2, guitar_2, guitar_4))
-alex_ranking = Ranking(alex, (guitar_2, guitar_3, guitar_4))
-dominique_ranking = Ranking(dominique, (guitar_4, guitar_1, guitar_2))
+ty_ranking = Ranking('ty', ('guitar_1', 'guitar_2', 'guitar_3'))
+helene_ranking = Ranking('helene', ('guitar_1', 'guitar_2', 'guitar_4'))
+alex_ranking = Ranking('alex', ('guitar_2', 'guitar_3', 'guitar_4'))
+dominique_ranking = Ranking('dominique', ('guitar_4', 'guitar_1', 'guitar_2'))
 
 # Expected result: Ty:1, Alex:2, Dominique:4, Helene:X
 
@@ -106,7 +95,7 @@ rankings = Rankings(frozenset({ty_ranking, helene_ranking, alex_ranking,
 
 if __name__ == '__main__':
   for (person, guitar) in allocate_guitars(rankings).items():
-    print(f'{person.name}: {guitar.name} ({guitar.luthier})\n')
+    print(f'{person}: {guitar}\n')
 
 
 
