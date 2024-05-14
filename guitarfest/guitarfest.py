@@ -102,27 +102,20 @@ def guitar_fest(rankings: Rankings, ordering: Ordering) -> Tuple[Allocation, All
   return (first_allocation, second_allocation)
 
 
-# ##### EXAMPLE #####
-
-# ordering = ('ty', 'helene', 'alex', 'dominique')
-
-rankings: Rankings = {
-  'ty': ('guitar_1', 'guitar_2', 'guitar_3'),
-  'helene': ('guitar_1', 'guitar_2', 'guitar_4'),
-  'alex': ('guitar_2', 'guitar_3', 'guitar_4'),
-  'dominique': ('guitar_4', 'guitar_1', 'guitar_2')}
-
-# # Expected result: Ty:1, Alex:2, Dominique:4, Helene:X
-
-# ##################
+###################
 
 
 if __name__ == '__main__':
 
-  # rankings = get_rankings_from_file('~/Downloads/rankings.csv')
-  vips = ('ty',)
-  ordering = make_starting_ordering(tuple(rankings.keys()), vips)
+  rankings: Rankings = {
+    'ty': ('guitar_1', 'guitar_2', 'guitar_3'),
+    'helene': ('guitar_1', 'guitar_2', 'guitar_4'),
+    'alex': ('guitar_2', 'guitar_3', 'guitar_4'),
+    'dominique': ('guitar_4', 'guitar_1', 'guitar_2')}
 
+  vips = ('helene',)
+
+  ordering = make_starting_ordering(tuple(rankings.keys()), vips)
   allocation_1, allocation_2 = guitar_fest(rankings, ordering)
 
   print('Allocation 1:')
