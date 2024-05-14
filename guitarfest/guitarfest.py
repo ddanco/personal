@@ -15,39 +15,37 @@ class Choice:
   guitar: Guitar
 
 
-@dataclass(frozen=True)
-class Ranking:
-  person: Person
-  ranking: Tuple[Guitar, ...]
-
-
-Rankings = FrozenSet[Ranking]
+Ranking = Tuple[Guitar, ...]
+Rankings = Dict[Person, Ranking]
 Ordering = Tuple[Person, ...]
 Choices = Tuple[Choice, ...]
-RankedChoices = Tuple[Choices, ...]
+Choicess = Tuple[Choices, ...]
 Allocation = Dict[Person, Guitar]
 
 
 def remove_guitar_and_person(
-    all_choices: RankedChoices, guitar: Guitar, person: Person) -> RankedChoices:
+    all_choices: Choicess, guitar: Guitar, person: Person) -> Choicess:
   choice_filter = lambda c: c.person != person and c.guitar != guitar
   return tuple(tuple(filter(choice_filter, choices)) for choices in all_choices)
 
 
-def build_choices_from_rankings(
-    rankings: Rankings, ordering: Ordering) -> RankedChoices:
+def order_choices(choicess: Choicess, ordering: Ordering) -> Choicess:
+  return tuple(tuple(sorted(choices, key=lambda c: ordering.index(c.person)))
+      for choices in choicess)
 
-  ordered_rankings = sorted(rankings, key=lambda r: ordering.index(r.person))
+
+def build_choices_from_rankings(
+    rankings: Rankings, ordering: Ordering) -> Choicess:
 
   def get_ith_choices(i: int) -> Choices:
-    return tuple(Choice(ranking.person, ranking.ranking[i])
-        for ranking in filter(lambda r: len(r.ranking) > i, ordered_rankings))
+    return tuple(Choice(person, ranking[i])
+        for person, ranking in rankings.items() if len(ranking) > i)
 
   return tuple(get_ith_choices(i)
-      for i in range(max(len(ranking.ranking) for ranking in rankings)))
+      for i in range(max(len(ranking) for ranking in rankings.values())))
 
 
-def allocate_guitars(choices: RankedChoices,
+def allocate_guitars(choices: Choicess,
                       allocation: Allocation) -> Allocation:
 
   # All possible guitars allocated
@@ -66,19 +64,29 @@ def allocate_guitars(choices: RankedChoices,
   return allocate_guitars(updated_choices, allocation)
 
 
-def guitar_fest(rankings: Rankings, ordering: Ordering) -> Allocation:
+def guitar_fest(rankings: Rankings, ordering: Ordering) -> Tuple[Allocation, Allocation]:
 
-  choices = build_choices_from_rankings(rankings, ordering)
-  first_allocation = allocate_guitars(choices, {})
+  choicess = build_choices_from_rankings(rankings, ordering)
+  first_allocation = allocate_guitars(choicess, {})
 
-  def reduce_helper(pair: Tuple[Person, Guitar]) -> RankedChoices:
-    return remove_guitar_and_person(choices, pair[1], pair[0])
+  def reduce_helper(acc: Choicess, pair: Tuple[Person, Guitar]) -> Choicess:
+    return remove_guitar_and_person(choicess, pair[1], pair[0])
 
-  updated_choices: Choices = reduce(reduce_helper, first_allocation.items())
+  updated_choices: Choicess = reduce(reduce_helper, first_allocation.items(), choicess)
 
-  second_allocation = allocate_guitars(updated_choices, {})
+  def choice_level_in_first_round(person: Person) -> int: ## Todo: combine this with ordering function
+    if person not in first_allocation:
+      # Did not get guitar in first allocation, give highest priority next round
+      return 100
+    return rankings[person].index(first_allocation[person])
 
-  return second_allocation
+  reordered_choices = tuple(tuple(sorted(choices,
+      key=lambda c: choice_level_in_first_round(c.person), reverse=True))
+      for choices in updated_choices)
+
+  second_allocation = allocate_guitars(reordered_choices, {})
+
+  return (first_allocation, second_allocation)
 
 
 
@@ -86,15 +94,12 @@ def guitar_fest(rankings: Rankings, ordering: Ordering) -> Allocation:
 
 ordering = ('ty', 'helene', 'alex', 'dominique')
 
-ty_ranking = Ranking('ty', ('guitar_1', 'guitar_2', 'guitar_3'))
-helene_ranking = Ranking('helene', ('guitar_1', 'guitar_2', 'guitar_4'))
-alex_ranking = Ranking('alex', ('guitar_2', 'guitar_3', 'guitar_4'))
-dominique_ranking = Ranking('dominique', ('guitar_4', 'guitar_1', 'guitar_2'))
+rankings: Rankings = {'ty': ('guitar_1', 'guitar_2', 'guitar_3'),
+              'helene': ('guitar_1', 'guitar_2', 'guitar_4'),
+              'alex': ('guitar_2', 'guitar_3', 'guitar_4'),
+              'dominique': ('guitar_4', 'guitar_1', 'guitar_2')}
 
 # Expected result: Ty:1, Alex:2, Dominique:4, Helene:X
-
-rankings = frozenset({ty_ranking, helene_ranking,
-                      alex_ranking, dominique_ranking})
 
 
 ##################
@@ -102,8 +107,16 @@ rankings = frozenset({ty_ranking, helene_ranking,
 
 
 if __name__ == '__main__':
-  for (person, guitar) in guitar_fest(rankings, ordering).items():
-    print(f'{person}: {guitar}\n')
+
+  allocation_1, allocation_2 = guitar_fest(rankings, ordering)
+
+  print('Allocation 1:')
+  for (person, guitar) in allocation_1.items():
+    print(f'{person}: {guitar}')
+
+  print('\nAllocation 2:')
+  for (person, guitar) in allocation_2.items():
+    print(f'{person}: {guitar}')
 
 
 
