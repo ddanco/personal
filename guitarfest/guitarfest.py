@@ -3,6 +3,7 @@ import csv
 from dataclasses import dataclass
 from functools import reduce
 from os import path
+from random import sample
 from typing import Dict, FrozenSet, Tuple
 
 
@@ -49,6 +50,12 @@ def remove_guitar_and_person(
     choices: Choices, guitar: Guitar, person: Person) -> Choices:
   choice_filter = lambda c: c.person != person and c.guitar != guitar
   return tuple(tuple(filter(choice_filter, choice_level)) for choice_level in choices)
+
+
+def make_starting_ordering(
+    participants: Tuple[Person, ...], vips: Tuple[Person, ...]) -> Ordering:
+  non_vips = tuple(filter(lambda p: p not in vips, participants))
+  return vips + tuple(sample(non_vips, len(non_vips))) # sample shuffles list
 
 
 def allocate_guitars(choices: Choices,
@@ -99,11 +106,11 @@ def guitar_fest(rankings: Rankings, ordering: Ordering) -> Tuple[Allocation, All
 
 # ordering = ('ty', 'helene', 'alex', 'dominique')
 
-# rankings: Rankings = {
-#   'ty': ('guitar_1', 'guitar_2', 'guitar_3'),
-#   'helene': ('guitar_1', 'guitar_2', 'guitar_4'),
-#   'alex': ('guitar_2', 'guitar_3', 'guitar_4'),
-#   'dominique': ('guitar_4', 'guitar_1', 'guitar_2')}
+rankings: Rankings = {
+  'ty': ('guitar_1', 'guitar_2', 'guitar_3'),
+  'helene': ('guitar_1', 'guitar_2', 'guitar_4'),
+  'alex': ('guitar_2', 'guitar_3', 'guitar_4'),
+  'dominique': ('guitar_4', 'guitar_1', 'guitar_2')}
 
 # # Expected result: Ty:1, Alex:2, Dominique:4, Helene:X
 
@@ -112,8 +119,9 @@ def guitar_fest(rankings: Rankings, ordering: Ordering) -> Tuple[Allocation, All
 
 if __name__ == '__main__':
 
-  rankings = get_rankings_from_file('~/Downloads/rankings.csv')
-  ordering = ('P1', 'P2', 'P3', 'P4', 'P5')
+  # rankings = get_rankings_from_file('~/Downloads/rankings.csv')
+  vips = ('ty',)
+  ordering = make_starting_ordering(tuple(rankings.keys()), vips)
 
   allocation_1, allocation_2 = guitar_fest(rankings, ordering)
 
