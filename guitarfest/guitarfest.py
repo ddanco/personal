@@ -27,11 +27,13 @@ Allocation = Dict[Person, Guitar]
 def get_rankings_from_file(filepath: str) -> Rankings:
   csvreader = csv.reader(open(path.expanduser(filepath)))
   next(csvreader) # Skip header
-  return {row[0]: tuple(filter(lambda i: i != '', row[1:])) for row in csvreader}
+  return {row[0]: tuple(filter(lambda i: i != '', row[1:]))
+      for row in csvreader}
 
 
 def order_choices(choices: Choices, ordering: Ordering) -> Choices:
-  return tuple(tuple(sorted(choice_level, key=lambda c: ordering.index(c.person)))
+  return tuple(tuple(sorted(choice_level,
+      key=lambda c: ordering.index(c.person)))
       for choice_level in choices)
 
 
@@ -43,13 +45,15 @@ def build_choices_from_rankings(
         for person, ranking in rankings.items() if len(ranking) > i)
 
   return order_choices(tuple(get_ith_choice_level(i)
-      for i in range(max(len(ranking) for ranking in rankings.values()))), ordering)
+      for i in range(max(len(ranking)
+      for ranking in rankings.values()))), ordering)
 
 
 def remove_guitar_and_person(
     choices: Choices, guitar: Guitar, person: Person) -> Choices:
   choice_filter = lambda c: c.person != person and c.guitar != guitar
-  return tuple(tuple(filter(choice_filter, choice_level)) for choice_level in choices)
+  return tuple(tuple(filter(choice_filter, choice_level))
+      for choice_level in choices)
 
 
 def make_starting_ordering(
@@ -78,16 +82,19 @@ def allocate_guitars(choices: Choices,
   return allocate_guitars(updated_choices, allocation)
 
 
-def guitar_fest(rankings: Rankings, ordering: Ordering) -> Tuple[Allocation, Allocation]:
+def guitar_fest(
+    rankings: Rankings, ordering: Ordering) -> Tuple[Allocation, Allocation]:
 
   choices = build_choices_from_rankings(rankings, ordering)
   first_allocation = allocate_guitars(choices, {})
 
-  allocated_pairs = tuple(Choice(person, guitar) for person, guitar in first_allocation.items())
-  updated_choices = tuple(tuple(filter(lambda c: c not in allocated_pairs, choice_level))
+  allocated_pairs = tuple(Choice(person, guitar)
+      for person, guitar in first_allocation.items())
+  updated_choices = tuple(tuple(filter(
+      lambda c: c not in allocated_pairs, choice_level))
       for choice_level in choices)
 
-  def choice_level_in_first_round(person: Person) -> int: ## Todo: combine this with ordering function
+  def choice_level_in_first_round(person: Person) -> int:
     if person not in first_allocation:
       # Did not get guitar in first allocation, give highest priority next round
       return 100
